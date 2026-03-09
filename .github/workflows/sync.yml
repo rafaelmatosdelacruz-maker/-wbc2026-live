@@ -1,0 +1,30 @@
+name: Sync WBC data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: auto-sync
+
+      - name: Run sync
+        run: node sync-thesportsdb.mjs
+        working-directory: auto-sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPORTSDB_API_BASE: ${{ secrets.SPORTSDB_API_BASE }}
+          WBC_LEAGUE_ID: ${{ secrets.WBC_LEAGUE_ID }}
