@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
 
 function env(name, fallback = '') {
   return process.env[name] || fallback;
@@ -32,14 +31,14 @@ function normalizeTeam(name = '') {
 }
 
 function inferPool(home, away) {
-  const all = [home, away];
-  const set = new Set(all.map(t => normalizeTeam(t)));
+  const set = new Set([normalizeTeam(home), normalizeTeam(away)]);
   const pools = {
     A: ['Canada', 'Colombia', 'Cuba', 'Panama', 'Puerto Rico'],
     B: ['Japón', 'Australia', 'Korea', 'Czech Republic', 'Chinese Taipei'],
     C: ['USA', 'México', 'Italia', 'Great Britain', 'Canada'],
     D: ['República Dominicana', 'Venezuela', 'Israel', 'Netherlands', 'Nicaragua']
   };
+
   for (const [pool, teams] of Object.entries(pools)) {
     if ([...set].every(team => teams.includes(team))) return pool;
   }
@@ -54,22 +53,43 @@ function mapStatus(raw = '') {
   return 'scheduled';
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { 'accept': 'application/json' }});
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res.json();
+async function fetchJsonSafe(url) {
+  try {
+    const res = await fetch(url, { headers: { accept: 'application/json' } });
+    if (!res.ok) {
+      console.warn(`Aviso: ${url} devolvió HTTP ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn(`Aviso: fallo leyendo ${url}`, err.message);
+    return null;
+  }
 }
 
 async function fetchSportsDbGames() {
+  const pastUrl = `${SPORTSDB_API_BASE}/eventspastleague.php?id=${WBC_LEAGUE_ID}`;
+  const nextUrl = `${SPORTSDB_API_BASE}/eventsnextleague.php?id=${WBC_LEAGUE_ID}`;
+
   const [past, next] = await Promise.all([
-    fetchJson(`${SPORTSDB_API_BASE}/eventspastleague.php?id=${WBC_LEAGUE_ID}`),
-    fetchJson(`${SPORTSDB_API_BASE}/eventsnextleague.php?id=${WBC_LEAGUE_ID}`)
+    fetchJsonSafe(pastUrl),
+    fetchJsonSafe(nextUrl)
   ]);
 
-  const combined = [...(past.events || []), ...(next.events || [])];
+  const combined = [
+    ...((past && past.events) || []),
+    ...((next && next.events) || [])
+  ];
+
+  if (!combined.length) {
+    console.warn('No llegaron juegos desde TheSportsDB.');
+    return [];
+  }
+
   return combined.map(event => {
     const homeTeam = normalizeTeam(event.strHomeTeam || '');
     const awayTeam = normalizeTeam(event.strAwayTeam || '');
+
     return {
       provider_id: `sportsdb:${event.idEvent}`,
       home_team: homeTeam,
@@ -78,7 +98,7 @@ async function fetchSportsDbGames() {
       away_score: event.intAwayScore ? Number(event.intAwayScore) : null,
       status: mapStatus(event.strStatus),
       game_date: event.dateEvent || null,
-      game_time: event.strTime ? event.strTime.slice(0,5) : null,
+      game_time: event.strTime ? event.strTime.slice(0, 5) : null,
       venue: event.strVenue || null,
       city: event.strCity || null,
       featured: homeTeam === 'República Dominicana' || awayTeam === 'República Dominicana',
@@ -96,18 +116,32 @@ function pct(w, l) {
 }
 
 function computeStandings(games) {
-  const finished = games.filter(g => g.status === 'final' && g.pool && g.home_score != null && g.away_score != null);
+  const finished = games.filter(
+    g => g.status === 'final' && g.pool && g.home_score != null && g.away_score != null
+  );
+
   const map = new Map();
 
   function ensure(pool, team) {
     const key = `${pool}|${team}`;
-    if (!map.has(key)) map.set(key, { pool, team_name: team, wins: 0, losses: 0, pct: '.000', sort_order: 999, updated_at: new Date().toISOString() });
+    if (!map.has(key)) {
+      map.set(key, {
+        pool,
+        team_name: team,
+        wins: 0,
+        losses: 0,
+        pct: '.000',
+        sort_order: 999,
+        updated_at: new Date().toISOString()
+      });
+    }
     return map.get(key);
   }
 
   for (const g of finished) {
     const home = ensure(g.pool, g.home_team);
     const away = ensure(g.pool, g.away_team);
+
     if (g.home_score > g.away_score) {
       home.wins += 1;
       away.losses += 1;
@@ -119,6 +153,7 @@ function computeStandings(games) {
 
   const rows = [...map.values()].map(r => ({ ...r, pct: pct(r.wins, r.losses) }));
   const byPool = {};
+
   for (const row of rows) {
     byPool[row.pool] ||= [];
     byPool[row.pool].push(row);
@@ -127,9 +162,10 @@ function computeStandings(games) {
   const out = [];
   for (const pool of Object.keys(byPool)) {
     byPool[pool]
-      .sort((a,b) => b.wins - a.wins || a.losses - b.losses || a.team_name.localeCompare(b.team_name))
+      .sort((a, b) => b.wins - a.wins || a.losses - b.losses || a.team_name.localeCompare(b.team_name))
       .forEach((row, idx) => out.push({ ...row, sort_order: idx + 1 }));
   }
+
   return out;
 }
 
@@ -147,11 +183,18 @@ async function replaceStandings(standings) {
 }
 
 async function sync() {
-  console.log('Iniciando sync con TheSportsDB…');
+  console.log('Iniciando sync con TheSportsDB...');
   const games = await fetchSportsDbGames();
+
+  if (!games.length) {
+    console.log('No se encontraron juegos para sincronizar. El proceso termina sin error.');
+    return;
+  }
+
   await upsertGames(games);
   const standings = computeStandings(games);
   await replaceStandings(standings);
+
   console.log(`Sync completado. Juegos: ${games.length}, standings: ${standings.length}`);
 }
 
