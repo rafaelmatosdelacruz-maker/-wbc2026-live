@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WBC 2026 Live RD</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">⚾</div>
+        <div>
+          <div class="brand-title">WBC 2026 Live RD</div>
+          <div class="brand-sub">Estilo ESPN · Marcadores en vivo · República Dominicana primero</div>
+        </div>
+      </div>
+      <nav class="main-nav">
+        <a href="#live">En vivo</a>
+        <a href="#scoreboard">Juegos</a>
+        <a href="#standings">Posiciones</a>
+        <a href="#schedule">Calendario</a>
+        <a href="#leaders">Líderes</a>
+        <a href="#news">Noticias</a>
+        <a href="admin.html">Panel admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="ticker-shell">
+    <div class="wrap">
+      <div id="ticker" class="ticker">Cargando ticker en vivo…</div>
+    </div>
+  </section>
+
+  <main class="wrap page">
+    <section class="hero-grid" id="live">
+      <article class="hero-card">
+        <div class="eyebrow">Actualización automática cada 30 segundos</div>
+        <h1>Clásico Mundial 2026 en vivo, con estilo premium tipo ESPN</h1>
+        <p class="hero-copy">
+          Sigue el juego principal, todos los marcadores, standings por pool, calendario completo,
+          líderes ofensivos y de pitcheo, y noticias rápidas del torneo.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshBtn" class="btn btn-primary">Actualizar ahora</button>
+          <button id="notifyBtn" class="btn btn-secondary">Activar alertas del navegador</button>
+        </div>
+        <div id="statusText" class="status-text">Cargando datos…</div>
+      </article>
+
+      <aside class="hero-side">
+        <div class="mini-panels">
+          <div class="mini-panel"><span>Base</span><strong>Supabase</strong></div>
+          <div class="mini-panel"><span>Refresh</span><strong>30s</strong></div>
+          <div class="mini-panel"><span>Modo</span><strong>Live</strong></div>
+          <div class="mini-panel"><span>Enfoque</span><strong>RD</strong></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Juego principal</h2>
+        <p>El partido destacado se toma de la tabla <strong>games</strong> con <strong>featured = true</strong>.</p>
+      </div>
+      <div id="featuredGame" class="featured-card loading">Cargando juego principal…</div>
+    </section>
+
+    <section class="section" id="scoreboard">
+      <div class="section-head">
+        <h2>Marcadores y juegos</h2>
+        <p>Todos los juegos guardados en tu base de datos.</p>
+      </div>
+      <div id="gamesGrid" class="games-grid">
+        <div class="loading-card">Cargando juegos…</div>
+      </div>
+    </section>
+
+    <section class="section" id="standings">
+      <div class="section-head">
+        <h2>Tabla de posiciones</h2>
+        <p>Posiciones completas por pool.</p>
+      </div>
+      <div id="standingsGrid" class="standings-grid">
+        <div class="card"><div class="loading-card">Cargando standings…</div></div>
+      </div>
+    </section>
+
+    <section class="section" id="schedule">
+      <div class="section-head">
+        <h2>Calendario</h2>
+        <p>Lista completa de juegos ordenados por fecha y hora.</p>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Juego</th>
+                <th>Estado</th>
+                <th>Sede</th>
+                <th>Ciudad</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody">
+              <tr><td colspan="6">Cargando calendario…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section two-col" id="leaders">
+      <div class="card">
+        <div class="section-head small">
+          <h2>Líderes ofensivos</h2>
+          <p>Top desde <strong>batting_leaders</strong>.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Jugador</th><th>Eq.</th><th>AVG</th><th>HR</th><th>RBI</th></tr>
+            </thead>
+            <tbody id="battingBody"><tr><td colspan="5">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head small">
+          <h2>Líderes de pitcheo</h2>
+          <p>Top desde <strong>pitching_leaders</strong>.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Lanzador</th><th>Eq.</th><th>ERA</th><th>IP</th><th>SO</th></tr>
+            </thead>
+            <tbody id="pitchingBody"><tr><td colspan="5">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="news">
+      <div class="section-head">
+        <h2>Noticias rápidas</h2>
+        <p>Notas cortas cargadas desde la tabla <strong>news_items</strong>.</p>
+      </div>
+      <div id="newsList" class="news-grid">
+        <article class="news-card">Cargando noticias…</article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div>WBC 2026 Live RD</div>
+      <div>Web premium conectada a Supabase · lista para crecer con feed en vivo real</div>
+    </div>
+  </footer>
+
+  <script src="supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

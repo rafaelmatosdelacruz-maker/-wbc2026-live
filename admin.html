@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin · WBC 2026 Live RD</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">🛠️</div>
+        <div>
+          <div class="brand-title">Panel administrador</div>
+          <div class="brand-sub">Edita juegos, standings, líderes y noticias</div>
+        </div>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html">Volver a la web</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap page admin-page">
+    <section class="hero-grid one-col">
+      <article class="hero-card">
+        <div class="eyebrow">Supabase conectado</div>
+        <h1>Actualiza el contenido del sitio</h1>
+        <p class="hero-copy">Este panel te permite cambiar manualmente los datos para que la web se vea en vivo. Puedes usarlo mientras conectas una API deportiva más adelante.</p>
+        <div class="hero-actions">
+          <button id="loadAdminBtn" class="btn btn-primary">Recargar panel</button>
+          <span id="adminStatus" class="status-text">Listo…</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="section two-col">
+      <div class="card">
+        <div class="section-head small">
+          <h2>Juego destacado</h2>
+          <p>Editar el juego principal.</p>
+        </div>
+        <form id="gameForm" class="form-grid">
+          <input id="game_id" type="hidden" />
+          <label>Equipo local<input id="home_team" /></label>
+          <label>Equipo visitante<input id="away_team" /></label>
+          <label>Score local<input id="home_score" type="number" /></label>
+          <label>Score visitante<input id="away_score" type="number" /></label>
+          <label>Estatus
+            <select id="status">
+              <option value="scheduled">scheduled</option>
+              <option value="live">live</option>
+              <option value="final">final</option>
+            </select>
+          </label>
+          <label>Fecha<input id="game_date" type="date" /></label>
+          <label>Hora<input id="game_time" type="time" /></label>
+          <label>Sede<input id="venue" /></label>
+          <label>Ciudad<input id="city" /></label>
+          <label>Destacado
+            <select id="featured">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </label>
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Guardar juego</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-head small">
+          <h2>Nueva noticia</h2>
+          <p>Agregar al bloque editorial.</p>
+        </div>
+        <form id="newsForm" class="form-grid">
+          <label>Título<input id="news_title" /></label>
+          <label>Etiqueta<input id="news_label" placeholder="Hoy / Hace 10 min" /></label>
+          <label class="full">Resumen<textarea id="news_summary" rows="5"></textarea></label>
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Publicar noticia</button></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="section two-col">
+      <div class="card">
+        <div class="section-head small">
+          <h2>Juegos guardados</h2>
+          <p>Referencia rápida.</p>
+        </div>
+        <div id="adminGames" class="admin-list">Cargando…</div>
+      </div>
+      <div class="card">
+        <div class="section-head small">
+          <h2>Noticias publicadas</h2>
+          <p>Últimas noticias.</p>
+        </div>
+        <div id="adminNews" class="admin-list">Cargando…</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="supabase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

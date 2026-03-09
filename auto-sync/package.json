@@ -1,0 +1,13 @@
+{
+  "name": "wbc-2026-auto-sync",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node sync-thesportsdb.mjs",
+    "sync:sportradar": "node sync-sportradar.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  }
+}
